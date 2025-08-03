@@ -1,169 +1,84 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Travbuddies’ Travel List</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <style>
-    body {
-      margin: 0;
-      padding-bottom: 80px;
-    }
-    header {
-      background: linear-gradient(90deg, #1e3c72, #2a5298);
-      color: white;
-      padding: 2rem 1rem;
-      text-align: center;
-    }
-    footer {
-      background: #222;
-      color: white;
-      padding: 1rem;
-      text-align: center;
-      position: fixed;
-      width: 100%;
-      bottom: 0;
-    }
-    .admin-controls, .traveler-form {
-      display: none;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Travbuddies Travel List</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>Travel Planning Made Simple</h1>
-    <p>Organize trips effortlessly with Travbuddies. Manage group travel plans with ease and clarity.</p>
-    <div class="text-end p-2">
-      <button class="btn btn-light btn-sm" onclick="logout()">Logout</button>
+    <div class="header-banner">
+      <h1>Travel Planning Made Simple</h1>
+      <p>Organize trips effortlessly with Travbuddies. Manage group travel plans with ease and clarity.</p>
+      <div class="menu-buttons">
+        <button onclick="showLoginForm('admin')">Admin Login</button>
+        <button onclick="showLoginForm('traveler')">Traveler Login</button>
+        <button onclick="logout()">Logout</button>
+      </div>
     </div>
   </header>
 
-  <main class="container my-4">
-    <div id="login-section" class="mb-4">
-      <h3>Login</h3>
-      <input id="username" class="form-control my-2" placeholder="Username" />
-      <input id="password" type="password" class="form-control my-2" placeholder="Password" />
-      <button onclick="login()" class="btn btn-primary">Login</button>
+  <main>
+    <div id="login-form" class="login-form">
+      <h2 id="login-title">Login</h2>
+      <input type="text" id="username" placeholder="Username" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="login()">Login</button>
     </div>
 
-    <div class="traveler-form">
-      <h4>Add Your Travel Plan</h4>
-      <form id="travelForm">
-        <input type="date" class="form-control my-2" id="startDate" required />
-        <input type="date" class="form-control my-2" id="endDate" required />
-        <input type="text" class="form-control my-2" id="destination" placeholder="Destination" required />
-        <input type="text" class="form-control my-2" id="travelerName" placeholder="Traveler Name" required />
-        <button type="submit" class="btn btn-success">Submit</button>
-      </form>
+    <div id="form-section" class="hidden">
+      <!-- Form for traveler/admin -->
+      <h2>Submit Your Travel Plan</h2>
+      <!-- Form fields go here -->
     </div>
 
-    <h4 class="mt-5">Travbuddies Travel List</h4>
-    <table class="table table-bordered table-striped" id="travelTable">
-      <thead>
-        <tr>
-          <th>Start Date</th>
-          <th>End Date</th>
-          <th>Destination</th>
-          <th>Traveler Name</th>
-          <th class="admin-controls">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+    <div id="table-section">
+      <h2>Travbuddies Travel List</h2>
+      <table id="travel-table">
+        <!-- Table goes here -->
+      </table>
+    </div>
   </main>
 
   <footer>
-    Travbuddies’ Travel List © 2025 | Organized by SGTREK | Live A Life With Passion |
+    Travbuddies’ Travel List © 2025 | Organized by SGTREK | Live A Life With Passion
+    <br />
     Contact: contact@sgtrek.com | WhatsApp: +65 9270 0908
   </footer>
 
   <script>
-    const ADMIN = { username: "admin", password: "admin123" };
-    const TRAVELER = { username: "traveler", password: "travel123" };
-    let role = localStorage.getItem("role") || "";
+    const ADMIN_HASH = "21232f297a57a5a743894a0e4a801fc3"; // md5("admin")
+    const TRAVELER_HASH = "ee11cbb19052e40b07aac0ca060c23ee"; // md5("traveler")
+    let currentUserRole = null;
 
-    document.addEventListener("DOMContentLoaded", () => {
-      if (role) applyRole(role);
-      renderTable();
-      document.getElementById("travelForm").addEventListener("submit", addEntry);
-    });
+    function showLoginForm(role) {
+      document.getElementById('login-form').style.display = 'block';
+      document.getElementById('login-title').textContent = `${role.charAt(0).toUpperCase() + role.slice(1)} Login`;
+      document.getElementById('login-form').dataset.role = role;
+    }
 
     function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
+      const role = document.getElementById('login-form').dataset.role;
+      const password = document.getElementById('password').value;
+      const hashed = CryptoJS.MD5(password).toString();
 
-      if (user === ADMIN.username && pass === ADMIN.password) {
-        localStorage.setItem("role", "admin");
-        applyRole("admin");
-      } else if (user === TRAVELER.username && pass === TRAVELER.password) {
-        localStorage.setItem("role", "traveler");
-        applyRole("traveler");
+      if ((role === 'admin' && hashed === ADMIN_HASH) || (role === 'traveler' && hashed === TRAVELER_HASH)) {
+        currentUserRole = role;
+        alert(`${role.charAt(0).toUpperCase() + role.slice(1)} logged in successfully.`);
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('form-section').classList.remove('hidden');
+        // Enable edit/delete for admin, disable for traveler
       } else {
-        alert("Invalid credentials!");
+        alert('Invalid credentials.');
       }
     }
 
     function logout() {
-      localStorage.removeItem("role");
-      location.reload();
-    }
-
-    function applyRole(userRole) {
-      role = userRole;
-      document.getElementById("login-section").style.display = "none";
-      if (userRole === "admin") {
-        document.querySelectorAll(".admin-controls").forEach(el => el.style.display = "table-cell");
-        document.querySelector(".traveler-form").style.display = "block";
-      } else if (userRole === "traveler") {
-        document.querySelector(".traveler-form").style.display = "block";
-      }
-    }
-
-    function addEntry(e) {
-      e.preventDefault();
-      const startDate = document.getElementById("startDate").value;
-      const endDate = document.getElementById("endDate").value;
-      const destination = document.getElementById("destination").value;
-      const travelerName = document.getElementById("travelerName").value;
-
-      if (new Date(endDate) < new Date(startDate)) {
-        alert("End date must be after start date.");
-        return;
-      }
-
-      const data = JSON.parse(localStorage.getItem("travels") || "[]");
-      data.push({ startDate, endDate, destination, travelerName });
-      localStorage.setItem("travels", JSON.stringify(data));
-      renderTable();
-      e.target.reset();
-    }
-
-    function deleteEntry(index) {
-      const data = JSON.parse(localStorage.getItem("travels") || "[]");
-      data.splice(index, 1);
-      localStorage.setItem("travels", JSON.stringify(data));
-      renderTable();
-    }
-
-    function renderTable() {
-      const data = JSON.parse(localStorage.getItem("travels") || "[]");
-      const tbody = document.getElementById("tableBody");
-      tbody.innerHTML = "";
-
-      data.sort((a, b) => new Date(a.startDate) - new Date(b.startDate)).forEach((item, i) => {
-        const row = `<tr>
-          <td>${item.startDate}</td>
-          <td>${item.endDate}</td>
-          <td>${item.destination}</td>
-          <td>${item.travelerName}</td>
-          <td class="admin-controls" style="display:${role === "admin" ? "table-cell" : "none"}">
-            <button class="btn btn-danger btn-sm" onclick="deleteEntry(${i})">Delete</button>
-          </td>
-        </tr>`;
-        tbody.innerHTML += row;
-      });
+      currentUserRole = null;
+      document.getElementById('form-section').classList.add('hidden');
+      alert('Logged out.');
     }
   </script>
 </body>

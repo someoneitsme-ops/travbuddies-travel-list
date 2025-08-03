@@ -12,6 +12,12 @@
     <input type="date" id="endDate">
     <input type="text" id="travelerName" placeholder="Traveler Name">
     <button onclick="addEntry()">Add Entry</button>
+    <!-- Inside your table generation code -->
+<td>
+  <button class="deleteBtn" data-id="${doc.id}" style="color: red; display: ${isAdmin ? 'inline-block' : 'none'};">
+    Delete
+  </button>
+</td>
   </div>
   <table id="dataTable" border="1"></table>
   <script type="module" src="firebase-config.js"></script>
